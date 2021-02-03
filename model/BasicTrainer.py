@@ -42,7 +42,7 @@ class Trainer(object):
 
         with torch.no_grad():
             for batch_idx, (data, target) in enumerate(val_dataloader):
-                label1 = data[..., 1:]
+                label1 = data[:,-1:,:,1:]
                 label1 = label1.view(-1)
                 label1 = torch.tensor(label1,dtype=torch.long)
                 
@@ -216,7 +216,7 @@ class Trainer(object):
 #                if batch_idx == len(data_loader)-1:
 #                    break
                 #ipdb.set_trace()
-                label1 =  data[...,1:]
+                label1 = data[:,-1:,:,1:]
                 label1 = label1.view(-1)
                 #label1 = torch.tensor(label1,dtype=torch.long)
                 
