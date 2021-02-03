@@ -36,7 +36,7 @@ class Trainer(object):
         # for arg, value in sorted(vars(args).items()):
         #     self.logger.info("Argument %s: %r", arg, value)
 
-    def val_epoch(self, epoch, val_dataloader):
+    def val_epoch(self, epoch, weight, val_dataloader):
         self.model.eval()
         total_val_loss = 0
 
@@ -56,7 +56,7 @@ class Trainer(object):
                 if self.args.real_value:
                     label = self.scaler.inverse_transform(label)
                 loss1 = torch.nn.CrossEntropyLoss()
-                loss = self.loss(output.cuda(), label)+50*loss1(output1.cuda(), label1.cuda())
+                loss = self.loss(output.cuda(), label)+weight*loss1(output1.cuda(), label1.cuda())
                 #a whole batch of Metr_LA is filtered
                 if not torch.isnan(loss):
                     total_val_loss += loss.item()
@@ -64,7 +64,7 @@ class Trainer(object):
         self.logger.info('**********Val Epoch {}: average Loss: {:.6f}'.format(epoch, val_loss))
         return val_loss
 
-    def train_epoch(self, epoch):
+    def train_epoch(self, epoch, weight):
         self.model.train()
         total_loss = 0
         total_loss1 = 0
@@ -98,7 +98,7 @@ class Trainer(object):
                 label1 = torch.tensor(label1,dtype=torch.long)
             loss1 = self.loss(output.cuda(), label) 
             loss2 = cro_en_l(output1.cuda(),label1)
-            loss = loss1+50*loss2
+            loss = loss1+weight*loss2
             loss.backward()
 
             # add max grad clipping
@@ -131,16 +131,21 @@ class Trainer(object):
         train_loss_list = []
         val_loss_list = []
         start_time = time.time()
+        weight = 100
         for epoch in range(1, self.args.epochs + 1):
+            inter = 10
+            if epoch%inter==0:
+                weight/=2 
             #epoch_time = time.time()
-            train_epoch_loss = self.train_epoch(epoch)
+            train_epoch_loss = self.train_epoch(epoch, weight)
+            print(weight)
             #print(time.time()-epoch_time)
             #exit()
             if self.val_loader == None:
                 val_dataloader = self.test_loader
             else:
                 val_dataloader = self.val_loader
-            val_epoch_loss = self.val_epoch(epoch, val_dataloader)
+            val_epoch_loss = self.val_epoch(epoch, weight, val_dataloader)
 
             #print('LR:', self.optimizer.param_groups[0]['lr'])
             train_loss_list.append(train_epoch_loss)
