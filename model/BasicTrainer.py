@@ -71,7 +71,7 @@ class Trainer(object):
         total_loss2 = 0
         for batch_idx, (data, target) in enumerate(self.train_loader):
             #ipdb.set_trace()
-            label1 = data[..., 1:]
+            label1 = data[:,-1:,:,1:]  #[64,1,170,1]
             label1 = label1.view(-1)
             
             
