@@ -43,7 +43,7 @@ class Trainer(object):
         with torch.no_grad():
             for batch_idx, (data, target) in enumerate(val_dataloader):
                 label1 = data[:,-1:,:,1:]
-                label1 = label1.view(-1)
+                label1 = label1.contiguous().view(-1)
                 label1 = torch.tensor(label1,dtype=torch.long)
                 
                 data = data[..., :self.args.input_dim]
@@ -70,9 +70,9 @@ class Trainer(object):
         total_loss1 = 0
         total_loss2 = 0
         for batch_idx, (data, target) in enumerate(self.train_loader):
-            #ipdb.set_trace()
-            label1 = data[:,-1:,:,1:]  #[64,1,170,1]
-            label1 = label1.view(-1)
+            
+            label1 = data[:,-1:,:,1:]
+            label1 = label1.contiguous().view(-1)
             
             
             data = data[..., :self.args.input_dim]
@@ -89,6 +89,7 @@ class Trainer(object):
                 teacher_forcing_ratio = 1.
             #data and target shape: B, T, N, F; output shape: B, T, N, F
             output, output1 = self.model(data, target, teacher_forcing_ratio=teacher_forcing_ratio)
+            #ipdb.set_trace()
             output1 = output1.view(-1,24)
             cro_en_l = torch.nn.CrossEntropyLoss()
             
@@ -133,9 +134,9 @@ class Trainer(object):
         start_time = time.time()
         weight = 100
         for epoch in range(1, self.args.epochs + 1):
-            inter = 10
-            if epoch%inter==0:
-                weight/=2 
+#            inter = 20
+#            if epoch%inter==0:
+#                weight/=2 
             #epoch_time = time.time()
             train_epoch_loss = self.train_epoch(epoch, weight)
             print(weight)
@@ -217,7 +218,7 @@ class Trainer(object):
 #                    break
                 #ipdb.set_trace()
                 label1 = data[:,-1:,:,1:]
-                label1 = label1.view(-1)
+                label1 = label1.contiguous().view(-1)
                 #label1 = torch.tensor(label1,dtype=torch.long)
                 
                 data = data[..., :args.input_dim]

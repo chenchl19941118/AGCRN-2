@@ -61,9 +61,9 @@ class AGCRN(nn.Module):
         self.end_conv = nn.Conv2d(1, args.horizon * self.output_dim, kernel_size=(1, self.hidden_dim), bias=True)
         
         #classifier
-        self.fc1 = nn.Linear(self.hidden_dim, 100, bias=True)
-        self.fc2 = nn.Linear(100, 50, bias=True)
-        self.fc3 = nn.Linear(50, 24,bias=True)
+        self.fc1 = nn.Linear(self.hidden_dim, 24, bias=True)
+#        self.fc2 = nn.Linear(100, 50, bias=True)
+#        self.fc3 = nn.Linear(50, 24,bias=True)
 
         # self.W = nn.Parameter(torch.FloatTensor(self.batch_size,args.horizon,1,12))
         # self.b = nn.Parameter(torch.FloatTensor(self.batch_size,args.horizon,args.num_nodes,12))
@@ -77,10 +77,10 @@ class AGCRN(nn.Module):
         init_state = self.encoder.init_hidden(source.shape[0])
         output, _ = self.encoder(source, init_state, self.node_embeddings)      #B, T, N, hidden
         output = output[:, -1:, :, :]                                   #B, 1, N, hidden
-
-        output1 = self.fc1(output.view(-1,1))
-        output1 = self.fc2(output1)
-        output1 = self.fc3(output1)
+        
+        output1 = self.fc1(output.contiguous().view(-1,64))
+#        output1 = self.fc2(output1)
+#        output1 = self.fc3(output1)
 
         #CNN based predictor
         output = self.end_conv((output))                         #B, T*C, N, 1
@@ -89,7 +89,7 @@ class AGCRN(nn.Module):
     #     if source.shape[0]==64:
     #         #task2 output
     #         output1 = torch.einsum('ijab,ijbc->ijac', source, self.W) + self.b   # [64,12,170,12]
-
+        
     # #        output1 = self.fc2(output1)
         #output1.view(output.shape[0],output.shape[1],output.shape[2],-1)
     #     else:
